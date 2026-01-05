@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Resizer</title>
+    <style>
+        body.noscroll {
+            position: fixed;
+            overflow-x: hidden;
+            overflow-y: hidden;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            height: 100%;
+            border-spacing: 0;
+        }
+
+        td {
+            text-align: center;
+            padding: 0;
+        }
+    </style>
+    <script>
+        let imgUrl, imgwidth, imgheight, uniqueId;
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        function fn() {
+            uniqueId = getQueryParam('id') || 'default'; 
+
+            // Select elements using data attributes
+            const imgElement = document.querySelector(`[data-iframe-id="default"]`);
+            const linkElement = document.querySelector(`[data-link-id="default"]`);
+            const tdElement = document.querySelector(`[data-td-id="default"]`);
+
+            if (imgElement) imgElement.setAttribute("data-iframe-id", uniqueId);
+            if (linkElement) linkElement.setAttribute("data-link-id", uniqueId);
+            if (tdElement) tdElement.setAttribute("data-td-id", uniqueId);
+
+            // Update selectors
+            const imageSelector = `[data-iframe-id="${uniqueId}"]`;
+            const linkSelector = `[data-link-id="${uniqueId}"]`;
+            const tdSelector = `[data-td-id="${uniqueId}"]`;
+
+            imgUrl = getQueryParam('img') || "https://difemaro.github.io/Resize/no_image.png";
+            const img = document.querySelector(imageSelector);
+            const link = document.querySelector(linkSelector);
+            const td = document.querySelector(tdSelector);
+
+            if (!img) return;
+
+            img.src = imgUrl; // Set the image URL first
+
+            img.onload = function () {
+                imgwidth = img.naturalWidth;
+                imgheight = img.naturalHeight;
+
+                if (imgwidth === 0 || imgheight === 0) {
+                    console.warn(`Image ${imgUrl} did not load properly.`);
+                    return;
+                }
+
+                resizeImage(img, td);
+            };
+
+            // Set link attributes if available
+            const linkUrl = getQueryParam('link');
+            if (linkUrl && link) {
+                link.href = linkUrl;
+                if (getQueryParam('target') === "new") {
+                    link.target = "_blank";
+                }
+            }
+
+            // Set background color if available
+            const background = getQueryParam('color');
+            if (background) {
+                document.body.style.backgroundColor = background;
+            }
+        }
+
+        function resizeImage(img, td) {
+            let iframeWidth = window.innerWidth;
+            let iframeHeight = window.innerHeight;
+
+            // Ensure td matches the iframe's height exactly
+            if (td) {
+                td.style.width = iframeWidth + "px";
+                td.style.height = iframeHeight + "px";
+            }
+
+            // Maintain aspect ratio for the image
+            let newWidth, newHeight;
+            if (imgwidth / iframeWidth <= imgheight / iframeHeight) {
+                newWidth = imgwidth * iframeHeight / imgheight;
+                newHeight = iframeHeight;
+            } else {
+                newWidth = iframeWidth;
+                newHeight = imgheight * iframeWidth / imgwidth;
+            }
+
+            img.width = newWidth;
+            img.height = newHeight;
+        }
+
+        // Resize on window resize event
+        window.onresize = function () {
+            const img = document.querySelector(`[data-iframe-id="${uniqueId}"]`);
+            const td = document.querySelector(`[data-td-id="${uniqueId}"]`);
+            if (img && imgwidth && imgheight) {
+                resizeImage(img, td);
+            }
+        };
+    </script>
+</head>
+
+<body onload="fn()" class="noscroll">
+    <table>
+        <tbody>
+            <tr>
+                <td data-td-id="default">
+                    <a data-link-id="default" target="_top" href="">
+                        <img src='' data-iframe-id="default" alt="Click to open image in new window"/>
+                    </a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
